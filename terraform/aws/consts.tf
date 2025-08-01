@@ -1,5 +1,26 @@
 
 data "aws_caller_identity" "current" {}
+data "aws_ami" "latest_amazon_linux" {
+  most_recent = true
+  owners      = ["amazon"]
+
+  # The filters narrow down the search to find the correct
+  # Amazon Linux 2023 AMI for x86_64 architecture.
+  filter {
+    name   = "name"
+    values = ["al2023-ami-2023*-x86_64"]
+  }
+
+  filter {
+    name   = "virtualization-type"
+    values = ["hvm"]
+  }
+
+  filter {
+    name   = "architecture"
+    values = ["x86_64"]
+  }
+}
 
 variable "company_name" {
   default = "acme"
@@ -25,9 +46,14 @@ variable "region" {
   default = "us-west-2"
 }
 
-variable ami {
-  type    = "string"
-  default = "ami-09a5b0b7edf08843d"
+# The 'ami' variable is now simplified. It no longer needs a hardcoded
+# default value. Instead, the AMI ID is referenced directly from the
+# data source, ensuring all resources that use this AMI get the latest version.
+variable "ami" {
+  type        = "string"
+  description = "The ID of the AMI to be used for instances."
+  # The default value is set to the ID found by the data source.
+  default     = data.aws_ami.latest_amazon_linux.id
 }
 
 variable "dbname" {
